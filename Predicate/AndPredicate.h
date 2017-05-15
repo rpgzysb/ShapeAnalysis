@@ -7,6 +7,11 @@
 
 using namespace std;
 
+// the and predicate
+// a composite predicate
+// looks like 
+// (x1 ^ x2)(v1, v2) <---> (x1 | v2) = npred, v1, v2 = args
+// can also be unary
 class AndPredicate : public LogicPredicate
 {
 public:

@@ -6,6 +6,9 @@
 
 using namespace std;
 
+// the arguments class
+// just to make arguments look the same
+// even though the number is different
 class PredicateArg
 {
 public:

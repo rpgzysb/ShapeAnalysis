@@ -1,4 +1,8 @@
 
+/*
+ * Utility for predicates.
+*/
+
 #include "PredicateUtil.h"
 #include "llvm/IR/InstrTypes.h"
 #include "../ControlFlow/Blur/Blur.h"
@@ -18,17 +22,19 @@
 using namespace llvm;
 using namespace std;
 
-
+// make unary predicate from name
 LogicPredicate* makeUnaryPredicate(string upred)
 {
 	return new UnaryPredicate(upred);
 }
 
+// make binary predicate from name
 LogicPredicate* makeBinaryPredicate(string bpred)
 {
 	return new BinaryPredicate(bpred);
 }
- 
+
+// make all predicates from name
 map<string, LogicPredicate*> makeAllPredicate(set<string>& upreds, set<string>& bpreds)
 {
 	map<string, LogicPredicate*> allPreds{};
@@ -44,26 +50,20 @@ map<string, LogicPredicate*> makeAllPredicate(set<string>& upreds, set<string>& 
 	return move(allPreds);
 }
 
+// make preconditions from branch instruction
 LogicPredicate* makePreconditions(Instruction* inst, map<string, LogicPredicate*>& allPredicates)
 {
+	// only consider branch instruction
 	if (BranchInst* bi = dyn_cast<BranchInst>(inst)) {
 		if (bi->isConditional()) {
 			Value* cmp_inst = bi->getCondition();
 			if (CmpInst* ci = dyn_cast<CmpInst>(cmp_inst)) {
-				outs() << "makePreconditions::";
-				ci->print(outs());
-				outs() << "\n";
 
+				// collect all operands
 				vector<Value*> oprs{};
 				for (auto cop = ci->op_begin(); cop != ci->op_end(); ++cop) {
 					Value* val = *cop;
 					oprs.push_back(val);
-				}
-
-				outs() << "makePreconditions::ops\n";
-				for (Value* cinst : oprs) {
-					cinst->print(outs());
-					outs() << "\n";
 				}
 
 				Value* x1 = oprs[0];
@@ -72,12 +72,15 @@ LogicPredicate* makePreconditions(Instruction* inst, map<string, LogicPredicate*
 				string x1_name{ x1->getName().str() };
 				string x2_name{ x2->getName().str() };
 
+				// see if x1 == null or x1 == x2
 				bool is_null = isa<ConstantPointerNull>(x2);
 				LogicPredicate* lp = nullptr;
 				if (is_null) {
+					// x1 == null
 					lp = new ExistPredicate("exist " + x1_name, allPredicates[x1_name], 0);
 				}
 				else {
+					// x1 == x2
 					lp = new ForallPredicate("forall " + x1_name + " == " + x2_name,
 						new ImplyPredicate(x1_name + " <==> " + x2_name, 
 							allPredicates[x1_name], allPredicates[x2_name]), 
@@ -100,6 +103,7 @@ LogicPredicate* makePreconditions(Instruction* inst, map<string, LogicPredicate*
 	return nullptr;
 }
 
+// collect all preconditions ast in a function
 map<int, LogicPredicate*> collectAllPreconditions(Function* F, map<string, LogicPredicate*>& allPredicates)
 {
 	hash<Instruction*> instHash{};
@@ -110,6 +114,7 @@ map<int, LogicPredicate*> collectAllPreconditions(Function* F, map<string, Logic
 			Instruction* inst = &*I;
 			int inst_val = instHash(inst);
 			LogicPredicate* precond = makePreconditions(inst, allPredicates);
+			// nullptr means does not have preconditions
 			if (precond != nullptr) {
 				allPreconditions[inst_val] = precond;
 			}
@@ -119,6 +124,7 @@ map<int, LogicPredicate*> collectAllPreconditions(Function* F, map<string, Logic
 	return move(allPreconditions);
 }
 
+// trace the getelementptr variable back
 Value* traceIndividualBack(Value* inst)
 {
 	// trace back from the load or store instruction
@@ -141,6 +147,7 @@ Value* traceIndividualBack(Value* inst)
 	return inst;
 }
 
+// make update predicates in an instruction
 map<string, LogicPredicate*> makeUpdatePredicate(Instruction* inst, 
 		map<string, LogicPredicate*>& allPredicates, unsigned nfield)
 {
@@ -174,8 +181,6 @@ map<string, LogicPredicate*> makeUpdatePredicate(Instruction* inst,
 			string x2 = from_unary->getName().str();
 			string x1 = li->getName().str();
 
-			outs() << "x1 = " << x1 << ", x2 = " << x2 << "\n";
-
 			res[x1] = new ExistPredicate("exist " + x2 + "^n",
 				new AndPredicate(x2 + "^n", allPredicates[x2], allPredicates["_n"]), 1);
 		}
@@ -189,14 +194,11 @@ map<string, LogicPredicate*> makeUpdatePredicate(Instruction* inst,
 		Value* store_to = si->getOperand(1);
 
 		if (doInvokeMemory(store_to, nfield)) {
-			outs() << "store inside\n";
 			Value* from_unary = traceIndividualBack(store_from);
 			Value* to_unary = traceIndividualBack(store_to);
 
 			string x2 = from_unary->getName().str();
 			string x1 = to_unary->getName().str();
-
-			outs() << "x1 = " << x1 << ", x2 = " << x2 << "\n";
 
 			if (isa<ConstantPointerNull>(from_unary)) {
 				// x1->n = null
@@ -218,19 +220,23 @@ map<string, LogicPredicate*> makeUpdatePredicate(Instruction* inst,
 	return move(res);
 }
 
+// see if the instruction satisfies the precondtion
 bool doesSatisfyPrecondition(ShapeStructure& ss, vector<int>& predicateIndex,
 	map<int, LogicPredicate*>& allPreconditions)
 {
 	for (int idx : predicateIndex) {
 		LogicPredicate* precond = allPreconditions[idx];
 		PredicateArg dummy{};
+		// just evaluate the preconditions in the current shape structure
+		// if it is not 2 (true), then it should be false (not satisfy)
 		int val = precond->apply(ss, dummy);
-		if (val != 1) { return false; }
+		if (val != 2) { return false; }
 	}
 
 	return true;
 }
 
+// collect all update predicates
 map<int, map<string, LogicPredicate*>> collectAllUpdatePredicate(Function* F,
 	map<string, LogicPredicate*>& allPredicates, unsigned nfield)
 {
@@ -239,6 +245,7 @@ map<int, map<string, LogicPredicate*>> collectAllUpdatePredicate(Function* F,
 	map<int, map<string, LogicPredicate*>> allUpdatePredicates{};
 	for (auto B = F->begin(); B != F->end(); ++B) {
 		for (auto I = B->begin(); I != B->end(); ++I) {
+			// iterate all functions
 			Instruction* inst = &*I;
 			int inst_val = instHash(inst);
 			allUpdatePredicates[inst_val] =
@@ -249,6 +256,7 @@ map<int, map<string, LogicPredicate*>> collectAllUpdatePredicate(Function* F,
 	return move(allUpdatePredicates);
 }
 
+// helper function for keyset in java
 set<string> convertMapSet(map<string, int>& mp)
 {
 	set<string> res{};
@@ -258,7 +266,7 @@ set<string> convertMapSet(map<string, int>& mp)
 	return move(res);
 }
 
-
+// initialize the predicates for each instruction
 map<int, vector<int>> initializeSatisfyPredicate(Function* F)
 {
 	hash<Instruction*> instHash{};
@@ -272,12 +280,17 @@ map<int, vector<int>> initializeSatisfyPredicate(Function* F)
 				// branch dispatch
 				if (bi->isConditional()) {
 					unsigned num_successors{ bi->getNumSuccessors() };
-					for (unsigned i = 0; i < num_successors; ++i) {
-						BasicBlock* next_bb = bi->getSuccessor(i);
-						Instruction* next_inst = &*next_bb->begin();
-						int next_inst_val = instHash(next_inst);
-						satisfyPredicates[next_inst_val].push_back(inst_val);
-					}
+
+					BasicBlock* true_bb = bi->getSuccessor(0);
+					BasicBlock* false_bb = bi->getSuccessor(1);
+					
+					Instruction* true_inst = &*true_bb->begin();
+					Instruction* false_inst = &*false_bb->begin();
+					
+					int true_inst_val = instHash(true_inst);
+					int false_inst_val = instHash(false_inst);
+					// only the true branch needs check
+					satisfyPredicates[true_inst_val].push_back(inst_val);
 				}
 			}
 		}

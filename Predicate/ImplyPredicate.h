@@ -7,6 +7,10 @@
 
 using namespace std;
 
+
+// the imply predicate
+// looks like 
+// (imply v1) x(v1, v2) <---> imply x = npred, v1, v2 = args
 class ImplyPredicate : public LogicPredicate
 {
 public:

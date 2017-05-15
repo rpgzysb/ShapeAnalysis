@@ -6,6 +6,7 @@
 using namespace std;
 using namespace llvm;
 
+// normal constructor
 SLLAnalysis::SLLAnalysis(ShapeStructure& ss, Function* f,
 	vector<ControlFlow*>& components,
 	map<int, map<string, LogicPredicate*>>& allUpdatePredicates_,
@@ -45,6 +46,8 @@ SLLAnalysis::FlowSet SLLAnalysis::merge(FlowSet& src1, FlowSet& src2)
 }
 
 
+// use different components to achieve the flow function
+// update
 SLLAnalysis::FlowSet SLLAnalysis::flowFunction(FlowSet& currFlow,
 	Instruction* inst,
 	unsigned nfield)
@@ -53,16 +56,16 @@ SLLAnalysis::FlowSet SLLAnalysis::flowFunction(FlowSet& currFlow,
 	
 	hash<Instruction*> instHash{};
 	int inst_val = instHash(inst);
+	// current preconditions
 	vector<int> predicateIndex = satisfyPredicates[inst_val];
+	// current update formula
 	map<string, LogicPredicate*> updatePredicates = allUpdatePredicates[inst_val];
 
-	outs() << "at instruction ";
+	outs() << "at instruction:\n\t";
 	inst->print(outs());
 	outs() << "\n";
-	for (auto& kvp : updatePredicates) {
-		outs() << "\t" << kvp.first << ": " << kvp.second->getName() << "\n";
-	}
 
+	// pass into the components in order
 	for (ControlFlow* cf : components) {
 		res = cf->flowFunction(res, inst, nfield, 
 			predicateIndex, allPreconditions, updatePredicates);

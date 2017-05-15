@@ -2,6 +2,10 @@
 #ifndef __SHAPE_STRUCTURE__
 #define __SHAPE_STRUCTURE__
 
+/*
+ * Implementation of the shape structure.
+*/
+
 #include <string>
 #include <map>
 #include <iostream>
@@ -46,8 +50,10 @@ public:
 	map<string, int> getPredicates() const { return *predicates; }
 	shared_ptr<map<string, int>> getPredicatePtr() const { return predicates; }
 
-	map<int, map<int, int>> getUnaryPredicates() const { return unaryPredicates; }
+	set<string> getIndividualsRange() const { return individualsRange; }
 
+	map<int, map<int, int>> getUnaryPredicates() const { return unaryPredicates; }
+	
 	map<int,
 		map<int, map<int, int>>
 	> getBinaryPredicates() const { return binaryPredicates; }
@@ -69,8 +75,6 @@ public:
 
 	// see if two structures are isomorphic
 	bool operator==(const ShapeStructure&);
-
-	set<string> getIndividualsRange() const { return individualsRange; }
 
 	// new individual counter
 	int indiv_count;

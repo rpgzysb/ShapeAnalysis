@@ -7,6 +7,12 @@
 
 using namespace std;
 
+// the exist predicate
+// a composite predicate
+// pos provides indication which arg varies
+// looks like 
+// (exist v1) x(v1, v2) <---> exists x = npred, v1, v2 = args
+// can also be unary
 class ExistPredicate : public LogicPredicate
 {
 public:

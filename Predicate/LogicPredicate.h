@@ -6,6 +6,9 @@
 
 using namespace std;
 
+
+// the predicate base class
+// interface of apply and getName
 class LogicPredicate
 {
 public:

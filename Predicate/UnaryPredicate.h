@@ -5,6 +5,9 @@
 
 using namespace std;
 
+// the unary predicate
+// looks like 
+// x1(v) <---> x1 = npred, v = args
 class UnaryPredicate : public LogicPredicate
 {
 public:

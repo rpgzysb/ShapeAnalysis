@@ -1,6 +1,11 @@
 #ifndef __PARAMETRIC_FRAMEWORK__
 #define __PARAMETRIC_FRAMEWORK__
 
+/*
+ * The general dataflow analysis framework.
+ * Imitation of the Soot analysis framework.
+ * Forward flow analysis without multiple dispatch. 
+*/
 
 
 #include "llvm/IR/Instructions.h"
@@ -28,6 +33,7 @@ class ParametricFramework
 {
 public:
 	using FlowSet = vector<ShapeStructure>;
+	// normal constructor
 	ParametricFramework(ShapeStructure&, Function*);
 	virtual ~ParametricFramework() {}
 	// predicate update specified
@@ -44,18 +50,16 @@ public:
 	void runAnalysis(Function*);
 
 protected:
-
+	// initialization
 	void initializeStateMap(Function* F, map<int, FlowSet>& last, map<int, FlowSet>& curr);
-
 	// helper function
 	bool isSameFlowSet(FlowSet& src1, FlowSet& src2);
-
 	void printFlowSet(FlowSet& src);
-
+	// merge from different branches
 	FlowSet accumulateBranch(vector<FlowSet>&);
-	
+	// update next
 	FlowSet produceNextStates(FlowSet& currState, Instruction*);
-
+	// see if changes
 	bool hasStateChange(FlowSet&, FlowSet&);
 	// the input structure
 	ShapeStructure input;

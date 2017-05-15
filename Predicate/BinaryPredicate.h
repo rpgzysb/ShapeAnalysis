@@ -6,6 +6,9 @@
 
 using namespace std;
 
+// the binary predicate
+// looks like 
+// n(v1, v2) <---> n = npred, v1, v2 = args
 class BinaryPredicate : public LogicPredicate
 {
 public:

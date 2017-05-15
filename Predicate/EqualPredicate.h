@@ -5,6 +5,9 @@
 
 using namespace std;
 
+// special predicate for equal
+// x1 == x2
+// different semantics than in boolean logic
 class EqualPredicate : public LogicPredicate
 {
 public:

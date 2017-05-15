@@ -7,6 +7,11 @@
 
 using namespace std;
 
+// the not predicate
+// a composite predicate
+// looks like 
+// (!x1)(v1, v2) <---> (!x1) = npred, v1, v2 = args
+// can also be unary
 class NotPredicate : public LogicPredicate
 {
 public:

@@ -22,10 +22,14 @@
 using namespace std;
 using namespace llvm;
 
+
+// implementation of the analysis
+// on the singly linked list
 class SLLAnalysis : public ParametricFramework
 {
 public:
 	using FlowSet = ParametricFramework::FlowSet;
+	// constructor
 	SLLAnalysis(ShapeStructure&, Function*, 
 		vector<ControlFlow*>&, 
 		map<int, map<string, LogicPredicate*>>& allUpdatePredicates_,
@@ -34,6 +38,7 @@ public:
 
 	~SLLAnalysis() {}
 
+	// implementation of functions of the interface
 	virtual FlowSet flowFunction(FlowSet& currFlow,
 		Instruction* inst,
 		unsigned nfield) override;
@@ -43,13 +48,10 @@ public:
 	virtual FlowSet copy(FlowSet&) override;
 	virtual FlowSet merge(FlowSet&, FlowSet&) override;
 private:
-	Value* traceIndividualBack(Value*);
-	ShapeStructure instFlow(ShapeStructure&, Instruction*);
-
+	// components
 	map<int, map<string, LogicPredicate*>> allUpdatePredicates;
 	map<int, LogicPredicate*> allPreconditions;
 	map<int, vector<int>> satisfyPredicates;
-
 	vector<ControlFlow*> components;
 };
 

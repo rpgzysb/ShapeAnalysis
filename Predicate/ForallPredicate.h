@@ -5,6 +5,12 @@
 
 using namespace std;
 
+// the forall predicate
+// a composite predicate
+// pos provides indication which arg varies
+// looks like 
+// (forall v1) x(v1, v2) <---> forall x = npred, v1, v2 = args
+// can also be unary
 class ForallPredicate : public LogicPredicate
 {
 public:

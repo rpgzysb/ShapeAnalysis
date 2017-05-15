@@ -8,6 +8,8 @@ using namespace std;
 using namespace llvm;
 
 
+// the transformation on a given shape structure
+// at a given instruction
 ShapeStructure Update::instFlow(ShapeStructure& from, Instruction* ins, 
 	unsigned nfield, map<string, LogicPredicate*>& updatePredicates)
 {
@@ -19,27 +21,28 @@ ShapeStructure Update::instFlow(ShapeStructure& from, Instruction* ins,
 		// x1 = free()
 		Function* called_func = ci->getCalledFunction();
 		string called_func_name{ called_func->getName().str() };
-		string x1 = ci->getName().str();
+
+		Instruction* user = dyn_cast<Instruction>(*(ci->user_begin()));
+
+		string x1 = user->getName().str();
 		if (called_func_name == "malloc") {
 			// malloc
 			ss.createIndividual();
+			// only unary predicate
 			for (auto& kvp : updatePredicates) {
 				string pred{kvp.first};
 				LogicPredicate* lp = kvp.second;
+				// update all individuals
 				set<string> allIndividuals{ss.getIndividualsRange()};
-
+				// iterate
 				for (string v : allIndividuals) {
 					vector<string> vs{v};
 					PredicateArg args{vs};
 					int val = lp->apply(ss, args);
-					outs() << "update::malloc::val = " << val << "\n";
 					ss.setUnaryPredicate(x1, v, val);
 				}
 
 			}
-		}
-		else if (called_func_name == "free") {
-			// free
 		}
 	}
 	else if (LoadInst* li = dyn_cast<LoadInst>(ins)) {
@@ -50,32 +53,23 @@ ShapeStructure Update::instFlow(ShapeStructure& from, Instruction* ins,
 		Value* load_from = li->getOperand(0);
 
 		if (doInvokeMemory(load_from, nfield)) {
-			outs() << "load inside\n";
 			Value* from_unary = traceIndividualBack(load_from);
 			string x2 = from_unary->getName().str();
 			string x1 = li->getName().str();
 
-			outs() << "x1 = " << x1 << ", x2 = " << x2 << "\n";
-
 			for (auto& kvp : updatePredicates) {
 				string pred{kvp.first};
 				LogicPredicate* lp = kvp.second;
-
-				outs() << "pred is " << pred << "\n";
-				outs() << "update predicate is: " << lp->getName() << "\n";
-
+				// all individuals
 				set<string> allIndividuals{ss.getIndividualsRange()};
-
 				// only unary predicates are possible
 				for (string v : allIndividuals) {
 					vector<string> vs{v};
 					PredicateArg args{vs};
 					int val = lp->apply(ss, args);
-					outs() << "update::load::" << x1 << " = " << val << "\n";
+					//outs() << "update::load::" << x1 << " = " << val << "\n";
 					ss.setUnaryPredicate(x1, v, val);
 				}
-
-				outs() << "finish load\n";
 			}
 		}
 
@@ -89,21 +83,15 @@ ShapeStructure Update::instFlow(ShapeStructure& from, Instruction* ins,
 		Value* store_to = si->getOperand(1);
 
 		if (doInvokeMemory(store_to, nfield)) {
-			outs() << "store inside\n";
 			Value* from_unary = traceIndividualBack(store_from);
 			Value* to_unary = traceIndividualBack(store_to);
 
 			string x2 = from_unary->getName().str();
 			string x1 = to_unary->getName().str();
 
-			outs() << "x1 = " << x1 << ", x2 = " << x2 << "\n";
-
 			for (auto& kvp : updatePredicates) {
 				string pred{kvp.first};
 				LogicPredicate* lp = kvp.second;
-
-				outs() << "pred is " << pred << "\n";
-				outs() << "update predicate is: " << lp->getName() << "\n";
 
 				set<string> allIndividuals{ss.getIndividualsRange()};
 				// only binary predicates are possible
@@ -112,12 +100,9 @@ ShapeStructure Update::instFlow(ShapeStructure& from, Instruction* ins,
 						vector<string> vs{v1, v2};
 						PredicateArg args{vs};
 						int val = lp->apply(ss, args);
-						outs() << "update::store::val = " << val << "\n";
 						ss.setBinaryPredicate(pred, v1, v2, val);
 					}
 				}
-
-				outs() << "finish store\n";
 			}
 		}
 
@@ -127,6 +112,7 @@ ShapeStructure Update::instFlow(ShapeStructure& from, Instruction* ins,
 	return move(ss);
 }
 
+// flow function provided
 Update::FlowSet Update::flowFunction(FlowSet& currFlow,
 	Instruction* inst,
 	unsigned nfield,
@@ -136,13 +122,13 @@ Update::FlowSet Update::flowFunction(FlowSet& currFlow,
 {
 	vector<ShapeStructure> res{};
 
+	// iterate through the flow set
 	for (ShapeStructure& ss : currFlow) {
+		// update basd on the preconditions
 		if (doesSatisfyPrecondition(ss, predicateIndex, allPreconditions)) {
-			outs() << "update::satisfy\n";
 			res.push_back(instFlow(ss, inst, nfield, updatePredicates));
 		}
 		else {
-			outs() << "update::not satisfy\n";
 			res.push_back(ss);
 		}
 	}

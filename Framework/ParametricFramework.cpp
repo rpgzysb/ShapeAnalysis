@@ -1,4 +1,10 @@
 
+/*
+ * The general dataflow analysis framework.
+ * Imitation of the Soot analysis framework.
+ * Forward flow analysis without multiple dispatch. 
+*/
+
 
 #include "ParametricFramework.h"
 
@@ -7,18 +13,15 @@
 using namespace std;
 using namespace llvm;
 
+// normal constructor
 ParametricFramework::ParametricFramework(ShapeStructure& ss, Function* f) :
 	input{ ss } 
 {
 	struct_type = getStructType(f);
 	nfield = getFieldIndex(struct_type);
-
-	outs() << "nfield = " << nfield << "\n";
-	outs() << "struct_type = ";
-	struct_type->print(outs());
-	outs() << "\n";
 }
 
+// helper function
 void ParametricFramework::printFlowSet(FlowSet& src1)
 {
 	outs() << "flow contains " << src1.size() << " shapes\n";
@@ -58,6 +61,7 @@ void ParametricFramework::printFlowSet(FlowSet& src1)
 	outs() << "\n";
 }
 
+// merge from different branches
 ParametricFramework::FlowSet ParametricFramework::accumulateBranch(vector<FlowSet>& srcs)
 {
 	FlowSet curr = srcs[0];
@@ -68,28 +72,29 @@ ParametricFramework::FlowSet ParametricFramework::accumulateBranch(vector<FlowSe
 	return move(curr);
 }
 
-
+// update the next state
 ParametricFramework::FlowSet ParametricFramework::produceNextStates(FlowSet& currState, Instruction* ins)
 {
 	hash<Instruction*> instHash{};
 	int inst_val = instHash(ins);
-	// TODO: change flow function
 	FlowSet nextStates{flowFunction(currState, ins, nfield)};
 
 	return move(nextStates);
 }
 
+// see if vector the same
 bool ParametricFramework::isSameFlowSet(FlowSet& src1, FlowSet& src2)
 {
 	return isSameVector<ShapeStructure>(src1, src2);
 }
 
+// see if changes
 bool ParametricFramework::hasStateChange(FlowSet& last, FlowSet& curr)
 {
 	return !isSameFlowSet(last, curr);
 }
 
-
+// initialization
 void ParametricFramework::initializeStateMap(Function* F,
 	map<int, FlowSet>& lastFlow, map<int, FlowSet>& currFlow)
 {
@@ -111,6 +116,8 @@ void ParametricFramework::initializeStateMap(Function* F,
 	}
 }
 
+// given an isntruction
+// find its previous instructions
 map<int, vector<int>> initializePrevMap(Function* F)
 {
 	hash<Instruction*> instHash{};
@@ -143,7 +150,7 @@ map<int, vector<int>> initializePrevMap(Function* F)
 }
 
 
-
+// dataflow analysis
 void ParametricFramework::runAnalysis(Function* F)
 {
 	hash<Instruction*> instHash{};
@@ -165,15 +172,13 @@ void ParametricFramework::runAnalysis(Function* F)
 	bool change = true;
 	while (change) {
 		change = false;
+		// update the change
 		lastFlow = currFlow;
-
 		for (auto B = F->begin(); B != F->end(); ++B) {
 			BasicBlock* bb = &*B;
 			for (auto I = bb->begin(); I != bb->end(); ++I) {
+				// current instruction
 				Instruction* ins = &*I;
-				outs() << "iterate at instruction: ";
-				ins->print(outs());
-				outs() << "\n";
 				int ins_val = instHash(ins);
 				vector<int> prevInsts{ allPrevInsts[ins_val] };
 				// get the current state
@@ -188,8 +193,7 @@ void ParametricFramework::runAnalysis(Function* F)
 					}
 				}
 
-				FlowSet currState = 
-					accumulateBranch(tmp);
+				FlowSet currState = accumulateBranch(tmp);
 
 				outs() << "original state\n";
 				printFlowSet(currState);
@@ -208,8 +212,4 @@ void ParametricFramework::runAnalysis(Function* F)
 			}
 		}
 	}
-
-
-
-
 }
