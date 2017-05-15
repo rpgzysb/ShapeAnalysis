@@ -1,8 +1,8 @@
 
 
 #include "Focus.h"
-#include "../../Preidcate/AndPredicate.h"
-#include "../../Preidcate/TruePredicate.h"
+#include "../../Predicate/AndPredicate.h"
+#include "../../Predicate/TruePredicate.h"
 
 using namespace std;
 using namespace llvm;
@@ -12,7 +12,7 @@ vector<LogicPredicate*> splitParts(LogicPredicate* formula)
 {
 	vector<LogicPredicate*> parts{};
 
-	if (AndPredicate* ap = dynamic_cast<AndPredicate>(formula)) {
+	if (AndPredicate* ap = dynamic_cast<AndPredicate*>(formula)) {
 		// and formula 
 		// should be split
 		parts.push_back(ap->getPred(0));
@@ -34,7 +34,12 @@ vector<LogicPredicate*> splitFormula(vector<LogicPredicate*> parts)
 {
 	vector<LogicPredicate*> phis{};
 
-	phis.push_back()
+	phis.push_back(new TruePredicate("_true"));
+	
+	LogicPredicate* so_far = nullptr;
+	for (unsigned i = 0; i < parts.size(); ++i) {
+
+	}
 
 	return move(phis);
 }
@@ -48,7 +53,7 @@ Focus::FlowSet Focus::focusOnConjunction(FlowSet& xs,
 	
 	vector<ShapeStructure> res{};
 	for (unsigned i = 0; i < phis.size(); ++i) {
-		res = focusOnLiteral(res, phis[i], parts[i]);
+		//res = focusOnLiteral(res, phis[i], parts[i]);
 	}
 
 	return move(res);

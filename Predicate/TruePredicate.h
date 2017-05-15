@@ -16,11 +16,6 @@ public:
 	{
 		return 2;
 	}
-	LogicPredicate* getPred(int n)
-	{
-		if (n == 0) { return phi1; }
-		else { return phi2; }
-	}
 };
 
 #endif

@@ -17,6 +17,12 @@ public:
 		vector<int>& predicateIndex,
 		map<int, LogicPredicate*>& allPreconditions,
 		map<string, LogicPredicate*>& updatePredicates) override;
+private:
+	FlowSet makeFocus(ShapeStructure& ss, 
+		LogicPredicate* formula);
+
+	FlowSet focusOnConjunction(FlowSet& xs, 
+	LogicPredicate* formula);
 };
 
 

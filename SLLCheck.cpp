@@ -104,12 +104,14 @@ namespace {
 			return move(predicates);
 		}
 
-		vector<ControlFlow*> initializeComponents()
+		vector<ControlFlow*> initializeComponents(unordered_set<LogicPredicate*>& allConstrains, 
+			map<string, LogicPredicate*>& allLogicPredicates, 
+			set<string>& unaryPredicates)
 		{
 			Focus* sll_focus = new Focus();
 			Update* sll_update = new Update();
-			Coerce* sll_coerce = new Coerce();
-			Blur* sll_blur = new Blur();
+			Coerce* sll_coerce = new Coerce(allConstrains);
+			Blur* sll_blur = new Blur(allLogicPredicates, unaryPredicates);
 			vector<ControlFlow*> components{
 				sll_focus, sll_update,
 				sll_coerce, sll_blur
@@ -183,7 +185,11 @@ namespace {
 			outs() << "\n";
 
 			ShapeStructure ss{ initializeConcreteStruct(individualMap, preds) };
-			vector<ControlFlow*> components{ initializeComponents() };
+			vector<ControlFlow*> components{ 
+				initializeComponents(allConstrains, 
+						allLogicPredicates,
+						unaryPredicates) 
+			};
 			// run the analysis
 			SLLAnalysis slla{
 				ss, 
