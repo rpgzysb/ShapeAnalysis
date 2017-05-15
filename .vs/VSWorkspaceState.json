@@ -1,0 +1,17 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\Analysis",
+    "\\ControlFlow",
+    "\\ControlFlow\\Blur",
+    "\\ControlFlow\\Coerce",
+    "\\ControlFlow\\Focus",
+    "\\ControlFlow\\Preconditions",
+    "\\ControlFlow\\Update",
+    "\\Framework",
+    "\\Testcase",
+    "\\Utility"
+  ],
+  "SelectedNode": "\\Utility\\Utility.cpp",
+  "PreviewInSolutionExplorer": false
+}
