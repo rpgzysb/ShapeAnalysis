@@ -17,3 +17,17 @@ void insert(List x, int d)
 	t->n = e;
 	y->n = t;
 }
+
+// List reverse(List x)
+// {
+// 	List y, t;
+// 	y = NULL;
+// 	while (x != NULL) {
+// 		t = y;
+// 		y = x;
+// 		x = x->n;
+// 		y->n = t;
+// 		t = NULL;
+// 	}
+// 	return y;
+// }

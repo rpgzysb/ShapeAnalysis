@@ -14,29 +14,24 @@ ShapeStructure::ShapeStructure(map<string, int>& indivs,
 	individuals{ indivs },
 	predicates{ preds }
 {
-	// TODO: initialize the given shape structure
 	indiv_count = 0;
 
 	for (auto indivp : indivs) {
+		individualsRange.insert(indivp.first);
 		for (auto kvp : *preds) {
-			if (kvp.first != "_n") {
-				unaryPredicates[kvp.second][indivp.second] 
-					= 0;
-			}
+			unaryPredicates[kvp.second][indivp.second] = 0;
 		}
 	}
 
 	for (auto indivp : indivs) {
 		for (auto indivp2 : indivs) {
-			binaryPredicates[8][indivp.second][indivp2.second]
-			 = 0;
+			binaryPredicates[7][indivp.second][indivp2.second] = 0;
 		}
 	}
 
 	for (auto kvp : unaryPredicates_) {
 		for (auto kvp2 : kvp.second) {
-			unaryPredicates[kvp.first][kvp2.first]
-			= kvp2.second;
+			unaryPredicates[kvp.first][kvp2.first] = kvp2.second;
 		}
 	}
 
@@ -57,7 +52,8 @@ ShapeStructure::ShapeStructure(const ShapeStructure& ss) :
 	predicates{ ss.getPredicatePtr() },
 	unaryPredicates{ ss.getUnaryPredicates() },
 	binaryPredicates{ ss.getBinaryPredicates() },
-	indiv_count{ ss.indiv_count }
+	indiv_count{ ss.indiv_count }, 
+	individualsRange{ ss.getIndividualsRange() }
 	{}
 
 // hash the index
@@ -83,7 +79,7 @@ int ShapeStructure::getUnaryLogic(string pred, string indiv)
 int ShapeStructure::getBinaryLogic(string binary, string indiv1, string indiv2)
 {
 	// TODO: binary predicate hash
-	int bval = 8;
+	int bval = 7;
 	int ival1 = getIndividualIdx(indiv1);
 	int ival2 = getIndividualIdx(indiv2);
 	return binaryPredicates[bval][ival1][ival2];
@@ -92,11 +88,31 @@ int ShapeStructure::getBinaryLogic(string binary, string indiv1, string indiv2)
 void ShapeStructure::createIndividual()
 {
 	// create new individuals on malloc
-	string new_name{ "_malloc" + to_string(indiv_count) };
+	string new_name{ "_malloc_" + to_string(indiv_count) };
 	individuals[new_name] = indiv_count;
-	indiv_count++;
+	individualsRange.insert(new_name);
+
+	map<string, int> predicateMap = *predicates;
+
+	for (auto& kvp : unaryPredicates) {
+		int pred{kvp.first};
+		unaryPredicates[pred][indiv_count] = 0;
+	}
+
+	int n_index = predicateMap["_n"];
+	for (auto& kvp : binaryPredicates[n_index]) {
+		int v1{kvp.first};
+		binaryPredicates[n_index][v1][indiv_count] = 0;
+		binaryPredicates[n_index][indiv_count][v1] = 0;
+	}
+	binaryPredicates[n_index][indiv_count][indiv_count] = 0;
+
+	unaryPredicates[predicateMap["_isNew"]][indiv_count] = 1;
 
 	// TODO: isNew && other predicate initialize
+	indiv_count++;
+
+	outs() << "create individual " << new_name << "\n";
 }
 
 // update the shape structure
@@ -111,7 +127,7 @@ void ShapeStructure::setBinaryPredicate(string binary,
 	string indiv1, string indiv2, int val)
 {
 	// TODO: binary predicate hash
-	int bval = 8;
+	int bval = 7;
 	int ival1 = getIndividualIdx(indiv1);
 	int ival2 = getIndividualIdx(indiv2);
 	binaryPredicates[bval][ival1][ival2] = val;

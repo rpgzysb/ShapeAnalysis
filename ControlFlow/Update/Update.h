@@ -15,10 +15,12 @@ public:
 		Instruction* inst,
 		unsigned nfield, 
 		vector<int>& predicateIndex,
-		map<int, LogicPredicate*>& allPreconditions) override;
+		map<int, LogicPredicate*>& allPreconditions,
+		map<string, LogicPredicate*>& updatePredicates) override;
 
 	ShapeStructure instFlow(ShapeStructure& from, 
-		Instruction* ins, unsigned nfield);
+		Instruction* ins, unsigned nfield, 
+		map<string, LogicPredicate*>& updatePredicates);
 };
 
 #endif

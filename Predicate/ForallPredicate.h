@@ -12,7 +12,7 @@ public:
 		LogicPredicate{ npred_ }, phi{ phi_ }, pos{ pos_ } {}
 	virtual int apply(ShapeStructure& ss, PredicateArg& args) override
 	{
-		int max_val = numeric_limits<int>::min();
+		int min_val = numeric_limits<int>::max();
 		map<string, int> all_individuals{ ss.getIndividuals() };
 
 		for (auto kvp : all_individuals) {
@@ -32,10 +32,10 @@ public:
 			}
 			PredicateArg sub_args{pargs};
 			int val = phi->apply(ss, sub_args);
-			if (max_val > val) { max_val = val; }
+			if (min_val > val) { min_val = val; }
 		}
 
-		return max_val;
+		return min_val;
 	}
 
 	LogicPredicate* getPred()

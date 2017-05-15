@@ -15,7 +15,8 @@ public:
 		Instruction* inst,
 		unsigned nfield, 
 		vector<int>& predicateIndex,
-		map<int, LogicPredicate*>& allPreconditions) override
+		map<int, LogicPredicate*>& allPreconditions,
+		map<string, LogicPredicate*>& updatePredicates) override
 	{
 		return currFlow;
 	}

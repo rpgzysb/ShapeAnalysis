@@ -27,9 +27,10 @@ public:
 	using FlowSet = vector<ShapeStructure>;
 	virtual FlowSet flowFunction(FlowSet& currFlow,
 		Instruction* inst,
-		unsigned nfield, 
+		unsigned nfield,
 		vector<int>& predicateIndex,
-		map<int, LogicPredicate*>& allPreconditions) = 0;
+		map<int, LogicPredicate*>& allPreconditions, 
+		map<string, LogicPredicate*>& updatePredicates) = 0;
 };
 
 

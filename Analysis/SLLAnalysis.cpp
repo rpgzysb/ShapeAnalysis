@@ -54,9 +54,18 @@ SLLAnalysis::FlowSet SLLAnalysis::flowFunction(FlowSet& currFlow,
 	hash<Instruction*> instHash{};
 	int inst_val = instHash(inst);
 	vector<int> predicateIndex = satisfyPredicates[inst_val];
+	map<string, LogicPredicate*> updatePredicates = allUpdatePredicates[inst_val];
+
+	outs() << "at instruction ";
+	inst->print(outs());
+	outs() << "\n";
+	for (auto& kvp : updatePredicates) {
+		outs() << "\t" << kvp.first << ": " << kvp.second->getName() << "\n";
+	}
 
 	for (ControlFlow* cf : components) {
-		res = cf->flowFunction(res, inst, nfield, predicateIndex, allPreconditions);
+		res = cf->flowFunction(res, inst, nfield, 
+			predicateIndex, allPreconditions, updatePredicates);
 	}
 
 	return move(res);

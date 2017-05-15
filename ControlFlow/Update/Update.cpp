@@ -8,16 +8,35 @@ using namespace std;
 using namespace llvm;
 
 
-ShapeStructure Update::instFlow(ShapeStructure& from, Instruction* ins, unsigned nfield)
+ShapeStructure Update::instFlow(ShapeStructure& from, Instruction* ins, 
+	unsigned nfield, map<string, LogicPredicate*>& updatePredicates)
 {
 	ShapeStructure ss{ from };
 
 	if (CallInst* ci = dyn_cast<CallInst>(ins)) {
 		// only cares about malloc and free
+		// x1 = malloc()
+		// x1 = free()
 		Function* called_func = ci->getCalledFunction();
 		string called_func_name{ called_func->getName().str() };
+		string x1 = ci->getName().str();
 		if (called_func_name == "malloc") {
 			// malloc
+			ss.createIndividual();
+			for (auto& kvp : updatePredicates) {
+				string pred{kvp.first};
+				LogicPredicate* lp = kvp.second;
+				set<string> allIndividuals{ss.getIndividualsRange()};
+
+				for (string v : allIndividuals) {
+					vector<string> vs{v};
+					PredicateArg args{vs};
+					int val = lp->apply(ss, args);
+					outs() << "update::malloc::val = " << val << "\n";
+					ss.setUnaryPredicate(x1, v, val);
+				}
+
+			}
 		}
 		else if (called_func_name == "free") {
 			// free
@@ -38,8 +57,26 @@ ShapeStructure Update::instFlow(ShapeStructure& from, Instruction* ins, unsigned
 
 			outs() << "x1 = " << x1 << ", x2 = " << x2 << "\n";
 
+			for (auto& kvp : updatePredicates) {
+				string pred{kvp.first};
+				LogicPredicate* lp = kvp.second;
 
+				outs() << "pred is " << pred << "\n";
+				outs() << "update predicate is: " << lp->getName() << "\n";
 
+				set<string> allIndividuals{ss.getIndividualsRange()};
+
+				// only unary predicates are possible
+				for (string v : allIndividuals) {
+					vector<string> vs{v};
+					PredicateArg args{vs};
+					int val = lp->apply(ss, args);
+					outs() << "update::load::" << x1 << " = " << val << "\n";
+					ss.setUnaryPredicate(x1, v, val);
+				}
+
+				outs() << "finish load\n";
+			}
 		}
 
 	}
@@ -61,8 +98,27 @@ ShapeStructure Update::instFlow(ShapeStructure& from, Instruction* ins, unsigned
 
 			outs() << "x1 = " << x1 << ", x2 = " << x2 << "\n";
 
-	
+			for (auto& kvp : updatePredicates) {
+				string pred{kvp.first};
+				LogicPredicate* lp = kvp.second;
 
+				outs() << "pred is " << pred << "\n";
+				outs() << "update predicate is: " << lp->getName() << "\n";
+
+				set<string> allIndividuals{ss.getIndividualsRange()};
+				// only binary predicates are possible
+				for (string v1 : allIndividuals) {
+					for (string v2 : allIndividuals) {
+						vector<string> vs{v1, v2};
+						PredicateArg args{vs};
+						int val = lp->apply(ss, args);
+						outs() << "update::store::val = " << val << "\n";
+						ss.setBinaryPredicate(pred, v1, v2, val);
+					}
+				}
+
+				outs() << "finish store\n";
+			}
 		}
 
 	}
@@ -75,15 +131,18 @@ Update::FlowSet Update::flowFunction(FlowSet& currFlow,
 	Instruction* inst,
 	unsigned nfield,
 	vector<int>& predicateIndex,
-	map<int, LogicPredicate*>& allPreconditions)
+	map<int, LogicPredicate*>& allPreconditions, 
+	map<string, LogicPredicate*>& updatePredicates)
 {
 	vector<ShapeStructure> res{};
 
 	for (ShapeStructure& ss : currFlow) {
 		if (doesSatisfyPrecondition(ss, predicateIndex, allPreconditions)) {
-			res.push_back(instFlow(ss, inst, nfield));
+			outs() << "update::satisfy\n";
+			res.push_back(instFlow(ss, inst, nfield, updatePredicates));
 		}
 		else {
+			outs() << "update::not satisfy\n";
 			res.push_back(ss);
 		}
 	}

@@ -70,11 +70,14 @@ public:
 	// see if two structures are isomorphic
 	bool operator==(const ShapeStructure&);
 
+	set<string> getIndividualsRange() const { return individualsRange; }
+
 	// new individual counter
 	int indiv_count;
 private:
 	// the set of all individuals of this concrete shape structure
 	map<string, int> individuals;
+	set<string> individualsRange;
 	// the set of all logic predicates of this concrete shape structure
 	shared_ptr<map<string, int>> predicates;
 

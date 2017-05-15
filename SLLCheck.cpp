@@ -50,11 +50,13 @@ namespace {
 			map<int,
 				map<int, map<int, int>>
 			> binaryPredicates{};
+			map<string, int> predMap = *preds;
+			int n_pos = predMap["_n"];
 			// initialize the beginning stage
-			binaryPredicates[8][0][1] = 2;
-			binaryPredicates[8][1][2] = 2;
-			binaryPredicates[8][2][3] = 2;
-			binaryPredicates[8][3][4] = 2;
+			binaryPredicates[n_pos][0][1] = 2;
+			binaryPredicates[n_pos][1][2] = 2;
+			binaryPredicates[n_pos][2][3] = 2;
+			binaryPredicates[n_pos][3][4] = 2;
 
 			// the initial shape structure
 			// to be analyzed
@@ -130,6 +132,7 @@ namespace {
 			set<string> unaryPredicates{ convertMapSet(predicates) };
 			unaryPredicates.erase("_n");
 			set<string> binaryPredicates{ "_n" };
+
 			// ast for predicates
 			map<string, LogicPredicate*> allLogicPredicates{
 				makeAllPredicate(unaryPredicates, binaryPredicates)
@@ -146,6 +149,32 @@ namespace {
 			map<int, vector<int>> satisfyPredicates{
 				initializeSatisfyPredicate(fblock)
 			};
+
+			// test for all predicates
+			outs() << "test for allLogicPredicates, size = " 
+				<< allLogicPredicates.size() << "\n";
+			for (auto& kvp : allLogicPredicates) {
+				outs() << kvp.first << ": "
+					<< kvp.second->getName() << "\n";
+			}
+			outs() << "\n";
+
+			outs() << "test for allPreconditions\n";
+			for (auto& kvp : allPreconditions) {
+				outs() << kvp.first << ": "
+					<< kvp.second->getName() << "\n";
+			}
+			outs() << "\n";
+
+			outs() << "test for allUpdatePredicates\n";
+			for (auto &kvp : allUpdatePredicates) {
+				outs() << kvp.first << ":\n";
+				for (auto& kvp2 : kvp.second) {
+					outs() << "\t" << kvp2.first << ": "
+						<< kvp2.second->getName() << "\n";
+				}
+			}
+			outs() << "\n";
 
 			ShapeStructure ss{ initializeConcreteStruct(individualMap, preds) };
 			vector<ControlFlow*> components{ initializeComponents() };

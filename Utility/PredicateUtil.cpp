@@ -109,7 +109,10 @@ map<int, LogicPredicate*> collectAllPreconditions(Function* F, map<string, Logic
 		for (auto I = B->begin(); I != B->end(); ++I) {
 			Instruction* inst = &*I;
 			int inst_val = instHash(inst);
-			allPreconditions[inst_val] = makePreconditions(inst, allPredicates);
+			LogicPredicate* precond = makePreconditions(inst, allPredicates);
+			if (precond != nullptr) {
+				allPreconditions[inst_val] = precond;
+			}
 		}
 	}
 
@@ -120,13 +123,7 @@ Value* traceIndividualBack(Value* inst)
 {
 	// trace back from the load or store instruction
 	// get the corresponding unary predicate
-	if (CastInst* ci = dyn_cast<CastInst>(inst)) {
-		// usually cast into the structure pointer
-		// from malloc
-		// %tmp12 = bitcast i8* %tmp11 to %struct.node*
-		return inst;
-	}
-	else if (GetElementPtrInst* gepi = dyn_cast<GetElementPtrInst>(inst)) {
+	if (GetElementPtrInst* gepi = dyn_cast<GetElementPtrInst>(inst)) {
 		// get a double pointer
 		// record in the map
 		// %tmp16 = getelementptr %struct.node, %struct.node* %tmp12, i32 0, i32 0
@@ -152,11 +149,13 @@ map<string, LogicPredicate*> makeUpdatePredicate(Instruction* inst,
 	if (CallInst* ci = dyn_cast<CallInst>(inst)) {
 		// only cares about malloc and free
 		// x1 = malloc()
-		string x1 = ci->getName().str();
 		Function* called_func = ci->getCalledFunction();
 		string called_func_name{ called_func->getName().str() };
 		if (called_func_name == "malloc") {
 			// malloc
+			if (res.find("_isNew") == res.end()) {
+				res["_isNew"] = new UnaryPredicate("_isNew");
+			}
 		}
 		// x1 = free()
 		else if (called_func_name == "free") {
@@ -178,7 +177,7 @@ map<string, LogicPredicate*> makeUpdatePredicate(Instruction* inst,
 			outs() << "x1 = " << x1 << ", x2 = " << x2 << "\n";
 
 			res[x1] = new ExistPredicate("exist " + x2 + "^n",
-				new AndPredicate(x2 + "^n", allPredicates[x2], allPredicates["_n"]), 2);
+				new AndPredicate(x2 + "^n", allPredicates[x2], allPredicates["_n"]), 1);
 		}
 	}
 	else if (StoreInst* si = dyn_cast<StoreInst>(inst)) {
