@@ -32,6 +32,9 @@ Focus.o: ./ControlFlow/Focus/Focus.h ./ControlFlow/Focus/Focus.cpp
 Coerce.o: ./ControlFlow/Coerce/Coerce.h ./ControlFlow/Coerce/Coerce.cpp
 	$(CLANGFLAGS) ./ControlFlow/Coerce/Coerce.cpp 
 
+Blur.o: ./ControlFlow/Blur/Blur.h ./ControlFlow/Blur/Blur.cpp
+	$(CLANGFLAGS) ./ControlFlow/Blur/Blur.cpp 
+
 ShapeStructure.o: ./ShapeStructure/ShapeStructure.h ./ShapeStructure/ShapeStructure.cpp
 	$(CLANGFLAGS) ./ShapeStructure/ShapeStructure.cpp
 
@@ -49,7 +52,7 @@ all: SLLCheck.so
 
 CXXFLAGS = -rdynamic $(shell llvm-config --cxxflags) -g -O2
 
-%.so: %.o Utility.o ShapeStructure.o PredicateUtil.o ParametricFramework.o Focus.o Update.o Coerce.o SLLAnalysis.o 
+%.so: %.o Utility.o ShapeStructure.o PredicateUtil.o ParametricFramework.o Blur.o Focus.o Update.o Coerce.o SLLAnalysis.o 
 	$(CXX) -dylib -fPIC -shared $^ -o $@
 
 clean:
