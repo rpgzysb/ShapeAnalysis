@@ -17,7 +17,7 @@ runPass: SLLCheck.cpp
 	opt -mem2reg -instnamer $(TESTIR) -S -o $(TESTIR)
 	opt -load ./SLLCheck.so -sll-check $(TESTIR) -o out
 
-CLANGFLAGS = clang++ -std=c++11 -fPIC -c
+CLANGFLAGS = clang++ -std=c++14 -fPIC -c
 
 
 Utility.o: ./Utility/Utility.h ./Utility/Utility.cpp
@@ -25,6 +25,9 @@ Utility.o: ./Utility/Utility.h ./Utility/Utility.cpp
 
 Update.o: ./ControlFlow/Update/Update.h ./ControlFlow/Update/Update.cpp
 	$(CLANGFLAGS) ./ControlFlow/Update/Update.cpp
+
+Focus.o: ./ControlFlow/Focus/Focus.h ./ControlFlow/Focus/Focus.cpp
+	$(CLANGFLAGS) ./ControlFlow/Focus/Focus.cpp
 
 ShapeStructure.o: ./ShapeStructure/ShapeStructure.h ./ShapeStructure/ShapeStructure.cpp
 	$(CLANGFLAGS) ./ShapeStructure/ShapeStructure.cpp
@@ -41,9 +44,9 @@ SLLAnalysis.o: ./Analysis/SLLAnalysis.h ./Analysis/SLLAnalysis.cpp
 
 all: SLLCheck.so
 
-CXXFLAGS = -rdynamic $(shell llvm-config --cxxflags) -g -O1
+CXXFLAGS = -rdynamic $(shell llvm-config --cxxflags) -g -O2
 
-%.so: %.o Utility.o ShapeStructure.o PredicateUtil.o ParametricFramework.o Update.o SLLAnalysis.o 
+%.so: %.o Utility.o ShapeStructure.o PredicateUtil.o ParametricFramework.o Focus.o Update.o SLLAnalysis.o 
 	$(CXX) -dylib -fPIC -shared $^ -o $@
 
 clean:

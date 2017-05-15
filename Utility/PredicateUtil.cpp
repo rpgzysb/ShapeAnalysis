@@ -16,6 +16,7 @@
 #include "../Predicate/ExistPredicate.h"
 #include "../Predicate/ForallPredicate.h"
 #include "../Predicate/ImplyPredicate.h"
+#include "../Predicate/SatisfyPredicate.h"
 #include "../Predicate/NotPredicate.h"
 #include "../Predicate/OrPredicate.h"
 
@@ -46,6 +47,12 @@ map<string, LogicPredicate*> makeAllPredicate(set<string>& upreds, set<string>& 
 	for (string bpred : bpreds) {
 		allPreds[bpred] = makeBinaryPredicate(bpred);
 	}
+
+	LogicPredicate* equal_pred = new EqualPredicate("eq");
+	LogicPredicate* nequal_pred = new NotPredicate("neq", equal_pred);
+
+	allPreds["eq"] = equal_pred;
+	allPreds["neq"] = nequal_pred;
 
 	return move(allPreds);
 }
@@ -296,4 +303,55 @@ map<int, vector<int>> initializeSatisfyPredicate(Function* F)
 		}
 	}
 	return move(satisfyPredicates);
+}
+
+
+unordered_set<LogicPredicate*> collectAllConstratins(set<string>& upreds, 
+	set<string>& bpreds, map<string, LogicPredicate*>& allLogicPredicates)
+{
+	unordered_set<LogicPredicate*> allConstratins{};
+
+
+	LogicPredicate* nequal_pred = allLogicPredicates["neq"];
+	LogicPredicate* equal_pred = allLogicPredicates["eq"];
+
+	for (string upred : upreds) {
+		LogicPredicate* x = allLogicPredicates[upred];
+		LogicPredicate* x_and_x = new AndPredicate("x^x", x, x);
+		
+		LogicPredicate* ver1 = new SatisfyPredicate(
+			"satisfy " + x_and_x->getName() + ", " + equal_pred->getName(),
+			x_and_x,
+			equal_pred
+			);
+
+		LogicPredicate* exist_and = new ExistPredicate(
+			"exist " + upred + "^(v1 != v2)",
+			new AndPredicate(x->getName() + "^(v1 != v2)",
+			 	x, 
+				nequal_pred),
+			1
+			);
+
+		LogicPredicate* ver2 = new SatisfyPredicate(
+			"satisfy " + exist_and->getName() + ", " + "!" + upred,
+			exist_and,
+			new NotPredicate("!" + upred, x)
+			);
+
+
+		allConstratins.insert(ver1);
+		allConstratins.insert(ver2);
+	}
+
+	// for (string bpred : bpreds) {
+	// 	LogicPredicate* n = allLogicPredicates[bpred];
+
+	// 	LogicPredicate* ver = new SatisfyPredicate(
+	// 		"satisfy exist n^n, (v1 != v2)",
+
+	// 		)
+
+	// }
+	return move(allConstratins);
 }

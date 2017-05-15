@@ -149,6 +149,12 @@ namespace {
 			map<int, vector<int>> satisfyPredicates{
 				initializeSatisfyPredicate(fblock)
 			};
+			// all coerce cnnstrains
+			unordered_set<LogicPredicate*> allConstrains{ 
+				collectAllConstratins(unaryPredicates,
+				binaryPredicates, 
+				allLogicPredicates)
+			};
 
 			// test for all predicates
 			outs() << "test for allLogicPredicates, size = " 

@@ -50,7 +50,8 @@ void ParametricFramework::printFlowSet(FlowSet& src1)
 		 outs() << "binary tables:\n";
 		 map<string, int> predicateMap = ss.getPredicates();
 		 int n_pos = predicateMap["_n"];
-		 for (auto idxvp : ss.getBinaryPredicates()[n_pos]) {
+		 map<int, map<int, int>> binaryPs{ (ss.getBinaryPredicates())[n_pos] };
+		 for (auto idxvp : binaryPs) {
 			outs() << idxvp.first << ": ";
 		 	for (auto uvp : idxvp.second) {
 		 		outs() << uvp.second << "(" << uvp.first << ") ";

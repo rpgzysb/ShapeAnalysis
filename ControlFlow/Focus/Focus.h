@@ -16,10 +16,7 @@ public:
 		unsigned nfield, 
 		vector<int>& predicateIndex,
 		map<int, LogicPredicate*>& allPreconditions,
-		map<string, LogicPredicate*>& updatePredicates) override
-	{
-		return currFlow;
-	}
+		map<string, LogicPredicate*>& updatePredicates) override;
 };
 
 

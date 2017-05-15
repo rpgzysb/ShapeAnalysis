@@ -69,5 +69,7 @@ set<string> convertMapSet(map<string, int>& mp);
 // initialize the predicates for each instruction
 map<int, vector<int>> initializeSatisfyPredicate(Function* F);
 
+unordered_set<LogicPredicate*> collectAllConstratins(set<string>& upreds, 
+	set<string>& bpreds, map<string, LogicPredicate*>& allLogicPredicates);
 
 #endif 

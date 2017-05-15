@@ -25,15 +25,28 @@ ShapeStructure::ShapeStructure(map<string, int>& indivs,
 	// add into the unary predicates
 	for (auto indivp : indivs) {
 		individualsRange.insert(indivp.first);
-		for (auto kvp : *preds) {
-			unaryPredicates[kvp.second][indivp.second] = 0;
+	}
+
+	outs() << "test individual ranges\n";
+	for (string indiv : individualsRange) {
+		outs() << indiv << " = " << individuals[indiv] << "\n";
+	}
+
+	map<string, int> predicateMap{*preds};
+	int n_pos = predicateMap["_n"];
+
+	for (string indiv : individualsRange) {
+		for (auto& kvp : predicateMap) {
+			int pred_hash = kvp.second;
+			int indiv_hash = individuals[indiv];
+			unaryPredicates[pred_hash][indiv_hash] = 0;
 		}
 	}
 
 	// add into the binary predicates
 	for (auto indivp : indivs) {
 		for (auto indivp2 : indivs) {
-			binaryPredicates[7][indivp.second][indivp2.second] = 0;
+			binaryPredicates[n_pos][indivp.second][indivp2.second] = 0;
 		}
 	}
 
@@ -44,13 +57,13 @@ ShapeStructure::ShapeStructure(map<string, int>& indivs,
 		}
 	}
 
-	for (auto kvp : binaryPredicates_) {
-		for (auto kvp2 : kvp.second) {
+		for (auto kvp2 : binaryPredicates_[n_pos]) {
 			for (auto kvp3 : kvp2.second) {
-				binaryPredicates[kvp.first][kvp2.first][kvp3.first] = kvp3.second;
+				binaryPredicates[n_pos][kvp2.first][kvp3.first] = kvp3.second;
 			}
 		}
-	}
+	
+
 
 }
 
@@ -109,12 +122,14 @@ void ShapeStructure::createIndividual()
 	map<string, int> predicateMap = *predicates;
 	int n_index = predicateMap["_n"];
 
-	for (auto& kvp : binaryPredicates[n_index]) {
-		int v1{kvp.first};
+	for (string indiv : individualsRange) {
+		int v1 = individuals[indiv];
 		binaryPredicates[n_index][v1][indiv_count] = 0;
 		binaryPredicates[n_index][indiv_count][v1] = 0;
 	}
 	binaryPredicates[n_index][indiv_count][indiv_count] = 0;
+
+	outs() << "binaryp size = " << binaryPredicates[n_index][0].size() << "\n";
 
 	// update
 	unaryPredicates[predicateMap["_isNew"]][indiv_count] = 2;

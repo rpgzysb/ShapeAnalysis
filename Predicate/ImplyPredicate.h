@@ -20,7 +20,12 @@ public:
 	{
 		int val1 = phi1->apply(ss, args);
 		int val2 = phi2->apply(ss, args);
-		return val1 == val2;
+		if (val1 == val2) {
+			return 2;
+		}
+		else {
+			return 0;
+		}
 	}
 
 	LogicPredicate* getPred(int n)
